@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>央视舆情模块化生成器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <div class="title">央视舆情模块化生成器</div>
+
+    <div class="calc-panel" id="calcPanel">
+        <div class="calc-card" id="sumModule"></div>
+        <div class="calc-card" id="segmentModule"></div>
+        <div class="calc-card" id="diffModule"></div>
+    </div>
+
+    <div class="tab-main" id="mainTabs">
+        <span data-m="richang" class="active">日常</span>
+        <span data-m="quantao">全套监测</span>
+        <span data-m="pingjie">📝 内容拼接</span>
+        <span data-m="reader">📖 文本阅读</span>
+    </div>
+
+    <div class="tab-sub" id="yuqingTab">
+        <span class="active" data-s="yuqing">舆情</span>
+        <span data-s="zhengmian">正面</span>
+    </div>
+
+    <div class="tool-bar" id="toolBar">
+        <button class="btn btn-warning normal-tool" id="editBtn">🔧 开启编辑模式</button>
+        <button class="btn btn-dark normal-tool" id="saveDefaultBtn">💾 设为默认配置</button>
+        <button class="btn btn-danger normal-tool" id="resetBtn">🔄 恢复初始配置</button>
+        <button class="btn btn-dark" id="clearAllBtn" style="background:#8c8c8c;">🧹 清空所有内容</button>
+    </div>
+
+    <div id="moduleContainer">
+        <p style="text-align:center;padding:40px;color:#999;">正在加载...</p>
+    </div>
+
+    <div class="copy-btn-group" id="copyBtns">
+        <button class="btn btn-primary" id="copyTipBtn">📋 复制【提示】整段</button>
+        <button class="btn btn-success" id="copyAddBtn">📋 复制【补充】整段</button>
+    </div>
+
+    <div class="preview-block" id="previewAll"></div>
+</div>
+
+<script src="core.js"></script>
+</body>
+</html>
