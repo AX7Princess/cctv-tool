@@ -813,6 +813,7 @@
                         <input type="text" id="formatDate" class="input-single" style="width:100px;" value="${this.App.api.getCurrentDateStr()}" placeholder="日期">
                         <input type="text" id="formatChannel" class="input-single" style="width:80px;" placeholder="频道"><span class="fix-text">(</span>
                         <input type="text" id="formatChannelName" class="input-single" style="width:100px;" placeholder="频道名"><span class="fix-text">)&nbsp;</span>
+                        <input type="text" id="formatColumn" class="input-single" style="width:120px;" placeholder="栏目">
                         <input type="text" id="formatTitle" class="input-single" style="width:180px;" placeholder="标题">
                         <button class="btn btn-light" id="copyFormatBtn" style="font-size:12px;">📋 复制</button>
                     </div>
@@ -828,19 +829,32 @@
         },
 
         _bindFormatBar() {
-            ['formatDate','formatChannel','formatChannelName','formatTitle'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { el.dataset.modified = 'true'; }); });
-            document.getElementById('copyFormatBtn')?.addEventListener('click', () => { const date = document.getElementById('formatDate').value, channel = document.getElementById('formatChannel').value, channelName = document.getElementById('formatChannelName').value, title = document.getElementById('formatTitle').value; this._copyText(this._applyPunctuation(`${date} ${channel}(${channelName})${title}`)); });
+            ['formatDate','formatChannel','formatChannelName','formatColumn','formatTitle'].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener('input', () => { el.dataset.modified = 'true'; }); });
+            document.getElementById('copyFormatBtn')?.addEventListener('click', () => {
+                const date = document.getElementById('formatDate').value;
+                const channel = document.getElementById('formatChannel').value;
+                const channelName = document.getElementById('formatChannelName').value;
+                const column = document.getElementById('formatColumn').value;
+                const title = document.getElementById('formatTitle').value;
+                const parts = [];
+                if (date) parts.push(date);
+                if (channel || channelName) parts.push(`${channel}${channelName ? '(' + channelName + ')' : ''}`);
+                if (column) parts.push(column);
+                if (title) parts.push(title);
+                this._copyText(this._applyPunctuation(parts.join(' ')));
+            });
         },
 
         _syncFormatBar() {
-            const fd = document.getElementById('formatDate'), fc = document.getElementById('formatChannel'), fcn = document.getElementById('formatChannelName'), ft = document.getElementById('formatTitle');
-            if (!fd || !fc || !fcn || !ft) return;
+            const fd = document.getElementById('formatDate'), fc = document.getElementById('formatChannel'), fcn = document.getElementById('formatChannelName'), fcol = document.getElementById('formatColumn'), ft = document.getElementById('formatTitle');
+            if (!fd || !fc || !fcn || !fcol || !ft) return;
             if (!fd.dataset.modified) fd.value = this.App.api.getCurrentDateStr();
             const allRows = [...this.container.querySelectorAll('.module-row')];
-            let tip = false, cn = '', cna = '', ct = '';
-            for (const row of allRows) { const fix = row.querySelector('.fix-text'); if (!fix) continue; const txt = fix.innerText; if (txt.includes('提示】')) { tip = true; continue; } if (txt.includes('补充】')) break; if (!tip) continue; if (txt.startsWith('频道')) { const ins = row.querySelectorAll('.input-single'); if (ins.length>=2) { cn=ins[0].value; cna=ins[1].value; } } if (txt.startsWith('内容')) { const ta = row.querySelector('textarea'); if (ta) ct=ta.value; } }
+            let tip = false, cn = '', cna = '', col = '', ct = '';
+            for (const row of allRows) { const fix = row.querySelector('.fix-text'); if (!fix) continue; const txt = fix.innerText; if (txt.includes('提示】')) { tip = true; continue; } if (txt.includes('补充】')) break; if (!tip) continue; if (txt.startsWith('频道')) { const ins = row.querySelectorAll('.input-single'); if (ins.length>=2) { cn=ins[0].value; cna=ins[1].value; } } else if (txt.startsWith('栏目')) { const ins = row.querySelectorAll('.input-single'); if (ins.length>=1) { col=ins[0].value; } } else if (txt.startsWith('内容')) { const ta = row.querySelector('textarea'); if (ta) ct=ta.value; } }
             if (!fc.dataset.modified) fc.value = cn;
             if (!fcn.dataset.modified) fcn.value = cna;
+            if (!fcol.dataset.modified) fcol.value = col;
             if (!ft.dataset.modified) ft.value = ct;
         },
 
