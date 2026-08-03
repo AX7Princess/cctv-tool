@@ -935,7 +935,7 @@
 
         _bindTipToAddSync(container) {
             if (container._tipToAddHandler) container.removeEventListener('input', container._tipToAddHandler);
-            const handler = (e) => { const el = e.target; if (el.dataset.section === 'tip' && el.dataset.field) { if (this.syncTimer) clearTimeout(this.syncTimer); this.syncTimer = setTimeout(() => { this._syncTipToAdd(); this.syncTimer = null; }, 100); } };
+            const handler = (e) => { const el = e.target; if (el.dataset.section === 'tip' && el.dataset.field) { if (this.syncTimer) clearTimeout(this.syncTimer); this.syncTimer = setTimeout(() => { this._syncTipToAdd(); this._syncFormatBar(); this.syncTimer = null; }, 100); } };
             container._tipToAddHandler = handler;
             container.addEventListener('input', handler);
         },
