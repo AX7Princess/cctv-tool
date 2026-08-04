@@ -69,8 +69,6 @@
                 .highlight { background: #ffeb3b; padding: 0 2px; border-radius: 2px; }
                 .highlight-insert { background: #b7eb8f; padding: 0 2px; border-radius: 2px; }
                 .highlight-before { background: #ffccc7; padding: 0 2px; border-radius: 2px; }
-                .diff-del { background: #ffccc7; text-decoration: line-through; padding: 0 2px; }
-                .diff-add { background: #b7eb8f; padding: 0 2px; }
                 .find-highlight { background: #ff9632; padding: 0 2px; border-radius: 2px; }
                 .find-highlight-active { background: #ff6b00; color: #fff; }
                 .find-replace-group {
@@ -156,24 +154,20 @@
                         </div>
 
                         <div style="margin-top:15px;border-top:1px dashed #ddd;padding-top:12px;">
+                            <div style="font-weight:bold;font-size:13px;margin-bottom:8px;">📄 文本左右对照（两个普通窗口，直接粘贴即可并排查看）</div>
                             <div style="display:flex;gap:10px;margin-bottom:10px;align-items:center;">
-                                <span style="font-weight:bold;font-size:13px;">🔍 文本差异对比</span>
-                                <button class="btn btn-primary" id="runDiffBtn" style="font-size:12px;">🔄 比对编辑区</button>
                                 <button class="btn btn-light" id="clearDiffBtn" style="font-size:12px;">🗑️ 清空</button>
+                                <span style="font-size:12px;color:#888;">左=原文，右=对比稿；仅并排查看，无自动对比</span>
                             </div>
                             <div class="reader-three-col" style="height:55vh;min-height:400px;">
-                                <div class="reader-col reader-col-left" style="width:220px;">
-                                    <div class="col-title">📋 窗口二修改记录</div>
-                                    <div class="col-content" id="diffRecordList"></div>
-                                </div>
                                 <div class="reader-col" style="flex:1;">
-                                    <div class="col-title">📄 窗口一（可编辑）</div>
-                                    <div class="col-content" id="diffLeftContent" contenteditable="true"></div>
+                                    <div class="col-title">📄 文本一（左 / 原文）</div>
+                                    <div class="col-content" id="diffLeftContent" contenteditable="true" style="font-family:monospace;font-size:13px;white-space:pre-wrap;"></div>
                                     <button class="btn btn-light btn-sm copy-diff-btn" data-target="diffLeftContent" style="margin:4px;">📋 复制左侧</button>
                                 </div>
                                 <div class="reader-col" style="flex:1;">
-                                    <div class="col-title">✏️ 窗口二（可编辑）</div>
-                                    <div class="col-content" id="diffRightContent" contenteditable="true"></div>
+                                    <div class="col-title">✏️ 文本二（右 / 对比稿）</div>
+                                    <div class="col-content" id="diffRightContent" contenteditable="true" style="font-family:monospace;font-size:13px;white-space:pre-wrap;"></div>
                                     <button class="btn btn-light btn-sm copy-diff-btn" data-target="diffRightContent" style="margin:4px;">📋 复制右侧</button>
                                 </div>
                             </div>
@@ -489,13 +483,11 @@
             return result;
         },
 
-        /* ========== 文本差异对比 ========== */
+        /* ========== 文本左右对照（普通并排窗口） ========== */
         _bindDiff() {
-            document.getElementById('runDiffBtn')?.addEventListener('click', () => this._runDiff());
             document.getElementById('clearDiffBtn')?.addEventListener('click', () => {
                 document.getElementById('diffLeftContent').innerHTML = '';
                 document.getElementById('diffRightContent').innerHTML = '';
-                document.getElementById('diffRecordList').innerHTML = '';
             });
         },
         _bindDiffCopyButtons() {
@@ -505,55 +497,6 @@
                     if (target) this.App.api.copyText(this._extractText(target));
                 });
             });
-        },
-        _runDiff() {
-            const left = document.getElementById('rightEditor');
-            const right = document.getElementById('rightEditor2');
-            const rec2 = document.getElementById('recordList2');
-            if (!left || !right) { alert('请先解析两个窗口'); return; }
-            const t1 = this._extractText(left);
-            const t2 = this._extractText(right);
-            if (!t1.trim() || !t2.trim()) { alert('编辑区为空'); return; }
-            document.getElementById('diffLeftContent').innerHTML = this._html(t1);
-            document.getElementById('diffRightContent').innerHTML = this._computeDiff(t1, t2);
-            document.getElementById('diffRecordList').innerHTML = rec2?.innerHTML || '<div style="color:#999;">无记录</div>';
-        },
-        _computeDiff(text1, text2) {
-            const a = [...text1], b = [...text2];
-            const lcs = this._LCS(a, b);
-            let out = '', i1 = 0, i2 = 0, il = 0;
-            while (i1 < a.length || i2 < b.length) {
-                if (il < lcs.length && a[i1] === lcs[il] && b[i2] === lcs[il]) {
-                    out += this._html(a[i1]); i1++; i2++; il++;
-                } else {
-                    if (i1 < a.length && (il >= lcs.length || a[i1] !== lcs[il])) {
-                        let del = ''; while (i1 < a.length && (il >= lcs.length || a[i1] !== lcs[il])) del += a[i1++];
-                        if (del) out += `<span class="diff-del">${this._html(del)}</span>`;
-                    }
-                    if (i2 < b.length && (il >= lcs.length || b[i2] !== lcs[il])) {
-                        let add = ''; while (i2 < b.length && (il >= lcs.length || b[i2] !== lcs[il])) add += b[i2++];
-                        if (add) out += `<span class="diff-add">${this._html(add)}</span>`;
-                    }
-                }
-            }
-            return out;
-        },
-        _LCS(arr1, arr2) {
-            const m = arr1.length, n = arr2.length;
-            if (m * n > 1000000) return this._simpleLCS(arr1, arr2);
-            const dp = Array(m+1).fill().map(() => Array(n+1).fill(0));
-            for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) dp[i][j] = arr1[i-1]===arr2[j-1] ? dp[i-1][j-1]+1 : Math.max(dp[i-1][j], dp[i][j-1]);
-            const lcs = []; let i=m,j=n;
-            while(i>0&&j>0){ if(arr1[i-1]===arr2[j-1]){lcs.unshift(arr1[i-1]);i--;j--;} else if(dp[i-1][j]>dp[i][j-1]) i--; else j--; }
-            return lcs;
-        },
-        _simpleLCS(arr1, arr2) {
-            const s = arr1.join(''), t = arr2.join('');
-            const w1 = s.split(/(\s+|[，。！？、；：""''【】《》（）\n])/);
-            const w2 = t.split(/(\s+|[，。！？、；：""''【】《】（\n])/);
-            const r = []; let i=0,j=0;
-            while(i<w1.length&&j<w2.length){ if(w1[i]===w2[j]){ r.push(w1[i]); i++; j++; } else { let f=false; for(let k=j+1;k<Math.min(j+5,w2.length);k++) if(w1[i]===w2[k]){ f=true; j=k; break; } if(!f) i++; else j++; } }
-            return r.join('').split('');
         },
         _html(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>'); },
 
